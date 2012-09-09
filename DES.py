@@ -4,11 +4,8 @@
 #All INPUT and OUTPUT is in BINARY
 
 import sys
-
-#temp workaround because i'm too lazy to find out how to permnently add to path
-sys.path.append("/usr/lib/python2.7/my_scripts")
-from eulerutils import binary2decimal,decimal2binary,binary2hex,hex2binary
-
+sys.path.append("C:\Users\steven\Dropbox\code2\Finalized\Python")
+from utils import decimal2binary, binary2decimal, hex2binary, binary2hex
 
 #DES Permutation Tables
 IP = [58,50,42,34,26,18,10,2,\
@@ -152,7 +149,7 @@ def xor(data1,data2):
     return new
 
 
-#DES encryption function
+#DES function
 def function(d,key):
     data = xor(E(d),key)
     s_result = ''
@@ -186,13 +183,15 @@ def encode_ECB(data,key):
     
     encoded = ''
     
-    while len(data) > 0:
+    padded = False
+    while not padded:
         #PADDING
         if len(data) < 64:
-            data += '1'
-            
-            while len(data) < 64:
-                data += '0'
+            remaining = len(data) / 8
+            for x in range(remaining):
+                data += decimal2binary(remaining,places=8)
+                
+            padded = True
             
         ip = permute(data[0:64],IP)
         
@@ -207,7 +206,8 @@ def encode_ECB(data,key):
             prev_R = R
         
         RL = R + L
-        encoded += permute(RL,IP_INVERSE)
+        next = permute(RL,IP_INVERSE)
+        encoded += next
         
         data = data[64:]
     
@@ -234,7 +234,15 @@ def decode_ECB(data,key):
             prev_R = R
         
         RL = R + L
-        decoded += permute(RL,IP_INVERSE)
+        next = permute(RL,IP_INVERSE)
+        
+        #remove padding
+        if len(data) == 64:
+            last = next[56:]
+            for x in range(binary2decimal(last)):
+                next = next[0:len(next)-8]
+        
+        decoded += next
         
         data = data[64:]
     
@@ -531,63 +539,26 @@ def f_print(data,block=4):
     print new
     
 
-#MAIN PROGRAM
+#MAIN PROGRAM TESTING
 if __name__ == '__main__':
-    th = hex2binary('50726F6750726178')
-    tk = hex2binary('0123456789ABCDEF')
-    tk2 = hex2binary('ABCDEF0123456789')
+    #DES testing
+    ECB_M = "0101010001101000011010010111001100100000011010010111001100100000011101000110100001100101001000000110110101100101011100110111001101100001011001110110010100100000011101000110111100100000011001010110111001100011011100100111100101110000011101000010000100100001"
+    ECB_K = "0011000100110010001100110011010000110101001101100011011100111000"
+    f_print(ECB_M,block=8)
     
-    #DES-ECB test
-    print 'DES-ECB Test'
-    enc = DES_encode(th,'ECB',tk,tk2)
-    f_print (binary2hex(enc),block=2)
+    print ""
     
-    dec = DES_decode(enc,'ECB',tk,tk2)
-    f_print(binary2hex(dec),block=2)
+    encoded = DES_encode(ECB_M,"ECB",ECB_K)
+    f_print(encoded,block=8)
     
-    print ''
+    print ""
     
-    #3DES-ECB test
-    print '3DES-ECB Test'
-    enc = DES_encode3(th,'ECB',tk,tk2)
-    f_print(binary2hex(enc),block=2)
+    decoded = DES_decode(encoded,"ECB",ECB_K)
+    f_print(decoded,block=8)
     
-    dec = DES_decode3(enc,'ECB',tk,tk2)
-    f_print(binary2hex(dec),block=2)
-    
-    print ''
-    
-    #DES-CBC test
-    k_cbc = '00110001 00110010 00110011 00110100 00110101 00110110 00110111 00111000'.replace(' ','')
-    m_cbc = '01010100 01101000 01101001 01110011 00100000 01101001 01110011 00100000 01110100 01101000 01100101 00100000 01101101 01100101 01110011 01110011 01100001 01100111 01100101 00100000 01110100 01101111 00100000 01100101 01101110 01100011 01110010 01111001 01110000 01110100 00100001 00100001'.replace(' ','')
-    iv_cbc = '01100001 01100010 01100011 01100100 01100101 01100110 01100111 01101000'.replace(' ','')
-    
-    print 'DES-CBC test'
-    enc = DES_encode(m_cbc,'CBC',k_cbc,iv_cbc)
-    f_print (binary2hex(enc),block=2)
-    print ''
-    dec = DES_decode(enc,'CBC',k_cbc,iv_cbc)
-    f_print(binary2hex(dec),block=2)
-    
-    print ''
-    
-    print 'DES-CFB test'
-    enc = DES_encode(m_cbc,'CFB',k_cbc,iv_cbc)
-    f_print (binary2hex(enc),block=2)
-    print ''
-    dec = DES_decode(enc,'CFB',k_cbc,iv_cbc)
-    f_print(binary2hex(dec),block=2)
-    
-    print ''
-    
-    print 'DES-OFB test'
-    enc = DES_encode(m_cbc,'OFB',k_cbc,iv_cbc)
-    f_print (binary2hex(enc),block=2)
-    print ''
-    dec = DES_decode(enc,'OFB',k_cbc,iv_cbc)
-    f_print(binary2hex(dec),block=2)
-    
-    
+    print ""
+    print ECB_M == decoded
+    print encoded == "0100110010101111101110011001001101111100000000000000000000000000"
     
     
     
