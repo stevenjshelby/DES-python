@@ -4,7 +4,6 @@
 #All INPUT and OUTPUT is in BINARY
 
 import sys
-sys.path.append("C:\Users\steven\Dropbox\code2\Finalized\Python")
 from utils import decimal2binary, binary2decimal, hex2binary, binary2hex
 
 #DES Permutation Tables
